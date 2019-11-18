@@ -7,48 +7,50 @@ import (
 	u "goapp1/util"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	fmt.Println("Hello, Newman")
-	s := "hey now"
-	s = strings.ToUpper(s)
-	fmt.Println(s)
 
 	env := godotenv.Load("..\\src\\goapp1\\.env")
-	//C:\Users\Robert\go\src\goapp1
 	if env != nil {
 		fmt.Println(env)
 	}
 
-	dbName := os.Getenv("db_name")
-	fmt.Println(dbName)
 	router := mux.NewRouter()
 	port := "8000"
 
-	router.HandleFunc("/api/greating", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("welcome to the api")
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("Api functioning")
+	})
+
+	router.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("Hello there")
 	})
 
 	router.HandleFunc("/api/thing1", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("thing1 endpoint hit")
 		w.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(2)
+		json.NewEncoder(w).Encode("Thing1 rep")
 
 	})
 
 	router.HandleFunc("/api/thing2", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("thing2 endpoint hit")
 		w.Header().Add("Content-Type", "application/json")
 		u.Message("success", "You hit an endpoint")
+		u.Response(w, u.Message("success", "You hit an endpoint"))
+
 	})
 
-	router.HandleFunc("/api/thing3", controllers.GetMessage()).Methods("GET")
+	router.HandleFunc("/api/thing31", controllers.GetMessage()).Methods("GET")
+	router.HandleFunc("/api/Login", controllers.Login()).Methods("GET")
+
+	router.Use(controllers.JwtMiddleware)
 
 	err := http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, router))
 
