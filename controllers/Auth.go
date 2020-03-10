@@ -19,9 +19,11 @@ func JwtMiddleware(next http.Handler) http.Handler {
 		noAuthRequired := []string{"/api/Login", "/api/hello"}
 		requestURL := r.URL.Path
 
-		if noAuthRequired[0] == requestURL || noAuthRequired[1] == requestURL {
-			next.ServeHTTP(w, r)
-			return
+		for i := range noAuthRequired {
+			if noAuthRequired[i] == requestURL {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
 		tokenHeader := r.Header.Get("Authorization")
@@ -40,7 +42,8 @@ func JwtMiddleware(next http.Handler) http.Handler {
 }
 
 // CreateToken call this to create the token using secret and return the string
-func CreateToken() string {
+// User auth data includes role, username,
+func CreateToken(userInfo userLogin) string {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user"] = true
@@ -50,4 +53,9 @@ func CreateToken() string {
 	//w.Write([]byte(tokenString))
 	fmt.Println(tokenString)
 	return tokenString
+}
+
+// CreateCookie will put the jwt inside a secure cookie and set it
+func CreateCookie() string {
+	return ""
 }

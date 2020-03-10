@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"goapp1/controllers"
+	"goapp1/models"
 	u "goapp1/util"
 	"net/http"
 	"os"
@@ -21,8 +22,17 @@ func main() {
 		fmt.Println(env)
 	}
 
+	models.DbTest()
+	/*
+		account := models.Account{}
+		account.GetInfo()
+	*/
+	//fmt.Println(account)
+
 	router := mux.NewRouter()
-	port := "8000"
+	port := "8080"
+
+	fmt.Println("hello")
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
@@ -48,11 +58,11 @@ func main() {
 	})
 
 	router.HandleFunc("/api/thing31", controllers.GetMessage()).Methods("GET")
-	router.HandleFunc("/api/Login", controllers.Login()).Methods("GET")
+	router.HandleFunc("/api/Login", controllers.Login()).Methods("POST")
 
 	router.Use(controllers.JwtMiddleware)
 
-	err := http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, router))
+	err := http.ListenAndServe("localhost:"+port, handlers.LoggingHandler(os.Stdout, router))
 
 	if err != nil {
 		fmt.Print(err)
