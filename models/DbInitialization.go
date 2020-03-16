@@ -43,6 +43,7 @@ func init() {
 	connection.DB().SetMaxOpenConns(0)
 
 	db = connection
+	db.SingularTable(true)
 	/**/
 	// connection.Close()
 
@@ -57,3 +58,6 @@ func DbTest() {
 func GetDbConn() *gorm.DB {
 	return db
 }
+
+// notes
+// db.SingularTable(true) makes gorm not assume evertable is plural

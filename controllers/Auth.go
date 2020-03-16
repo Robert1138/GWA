@@ -1,16 +1,7 @@
 package controllers
 
-import (
-	"fmt"
-	u "goapp1/util"
-	"net/http"
-	"os"
-	"time"
-
-	"github.com/dgrijalva/jwt-go"
-)
-
 // SigningKey Holds the secret for signing jwt
+/*
 var SigningKey = []byte(os.Getenv("token_secret"))
 
 // JwtMiddleware checks requests that require auth
@@ -43,7 +34,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 
 // CreateToken call this to create the token using secret and return the string
 // User auth data includes role, username,
-func CreateToken(userInfo userLogin) string {
+func CreateToken(userIn) string {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user"] = true
@@ -59,3 +50,5 @@ func CreateToken(userInfo userLogin) string {
 func CreateCookie() string {
 	return ""
 }
+
+*/

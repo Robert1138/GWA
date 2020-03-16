@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/securecookie"
 )
@@ -12,13 +13,14 @@ var sCookie *securecookie.SecureCookie
 
 func init() {
 
-	randHashKey := securecookie.GenerateRandomKey(32)
-	randBlockKey := securecookie.GenerateRandomKey(32)
-	var hashkey = randHashKey
-	var blockKey = randBlockKey
-	sCookie = securecookie.New(hashkey, blockKey)
+	var hashKey = []byte(os.Getenv("hashkey"))
+	var blockKey = []byte(os.Getenv("blockkey"))
+	sCookie = securecookie.New(hashKey, blockKey)
 	fmt.Println("sCookie has been initialized")
-	//env := godotenv.Load("..\\src\\goapp1\\.env")
+	fmt.Println(os.Getenv("hashkey"))
+
+	// fmt.Println(base64.StdEncoding.EncodeToString([]byte(securecookie.GenerateRandomKey(32))))
+	// fmt.Println(base64.StdEncoding.EncodeToString([]byte(securecookie.GenerateRandomKey(32))))
 }
 
 // GetSecureCookie will return global SecureCookie variable
@@ -41,7 +43,6 @@ func PrepareCookie(token string, tokenName string) *http.Cookie {
 			Name:     tokenName,
 			Value:    encodedCookie,
 			Path:     "/",
-			Secure:   true,
 			HttpOnly: true,
 		}
 		cookie = tempCookie

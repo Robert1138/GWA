@@ -6,26 +6,57 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type Account struct {
-	gorm.Model
-	Id       int
-	Name     string
-	Age      int
-	FavColor string
+type User struct {
+	UserID   uint   `gorm:"primary_key;column:UserID"`
+	Username string `gorm:"column:Username"`
+	Password string `gorm:"column:Password"`
 }
 
-func (account *Account) GetInfo() {
-	record := GetDbConn()
-	if record == nil {
-		fmt.Println("Issue getting connection from account")
+type Userdetail struct {
+	UserDetailID int
+	DOB          string
+	Email        string
+	PhoneNumber  string
+	UserID       string
+}
+
+// ValidUser checks if user exists TODO returns bool if it exists and the user struct
+func ValidUser(currUsername string) (bool, User) {
+	user := User{}
+	db.LogMode(true)
+	db := GetDbConn()
+	err := db.Table("user").Where("Username=?", currUsername).First(&user).Error
+
+	// err if successful will always return nil
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		fmt.Println("Error occured connecting to DB")
+		return false, user
+	} else if !gorm.IsRecordNotFoundError(err) { // record is found
+		return true, user
 	} else {
-		fmt.Println("Db connection established using account receiver")
+		return false, user // returns false if record is not found ..... and anything else bad that happens
 	}
 }
 
 /*
-Id
-Name
-Age
-FavColor
+func UserID(username string) int {
+	user := User{}
+	db := GetDbConn()
+	err := db.Where("Username = ?", username).First(&user)
+
+	fmt.Printf("UserID: %d", user.UserID)
+	return 0
+}
 */
+
+// TODO checkDbErr checks db errors ..... maybe some logging service on the way
+// possible gorm errors that can be returned ErrUnaddressable, ErrInvalidSQL, ErrRecordNotFound
+func checkDbErr() {
+}
+
+// notes
+// with gorm to put more tags on struct ses a semi colon ie gorm:blah:soemthing;key:bleh
+// useful querries
+//     db.Table("users").Where("Username=?", currUsername).Find(&user)
+//     db.Table("users").Where("Username=?", currUsername).Select("*")
+//     db.Raw("SELECT * FROM users WHERE Username = ?", currUsername)

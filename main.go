@@ -59,6 +59,7 @@ func main() {
 
 	router.HandleFunc("/api/thing31", controllers.GetMessage()).Methods("GET")
 	router.HandleFunc("/api/Login", controllers.Login()).Methods("POST")
+	router.HandleFunc("/api/Test", controllers.Test()).Methods("GET")
 
 	router.Use(controllers.JwtMiddleware)
 
