@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"goapp1/models"
 	u "goapp1/util"
@@ -11,8 +10,10 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/csrf"
 )
 
+// SigningKey is the key or decoding secure cookies
 var SigningKey = []byte(os.Getenv("token_secret"))
 
 type userLogin struct {
@@ -20,25 +21,17 @@ type userLogin struct {
 	Password string `json:"password"`
 }
 
-// Claims for inside out jwt token
+// JwtToken is the claims for inside out jwt token
 type JwtToken struct {
 	Exp    int64
 	UserID uint
 	jwt.StandardClaims
 }
 
-// GetMessage returns a simple response
-func GetMessage() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		u.Response(w, u.Message("success", "it worked"))
-	}
-}
-
 // Login will take credentials, verify and send a jwt in the response, TODO use secure cookies
 func Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO check credentials THEN return response
-		// Will hold user info from login post
+
 		var user userLogin
 		// Try to decode the request body into the struct. If there is an error,
 		// respond to the client with the error message and a 400 status code.
@@ -47,15 +40,11 @@ func Login() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		// Do something with the userLogin struct
-		fmt.Println("User: " + user.Username + " " + user.Password)
-
-		isValid, userCred := models.ValidUser(user.Username)
 		// when user credentials are identified we can set token and send cookie with jwt
+		// boolean, User returned
+		isValid, userCred := models.ValidUser(user.Username)
 		if isValid {
 			fmt.Println(userCred.UserID)
-			w.Header().Set("X-CSRF-Token", "bleh")
 			http.SetCookie(w, PrepareCookie(CreateToken(w, userCred), "jwt"))
 		} else {
 			w.WriteHeader(http.StatusUnprocessableEntity) // send a 422 -- user they sent does not exist
@@ -64,28 +53,50 @@ func Login() http.HandlerFunc {
 	}
 }
 
-// jWTFromCookie decodes the cookie and returns the jwt
-func Test() http.HandlerFunc {
+// Register will
+func Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var newUser models.User
+		err := json.NewDecoder(r.Body).Decode(&newUser)
+		userAdded, err := models.AddUser(newUser)
 
-		reqCookie, err := r.Cookie("jwt")
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404 cookie does not exist"))
-		}
-
-		if reqCookie == nil {
-			fmt.Println("reqCookie is nil")
-		} else {
-			val := make(map[string]string)
-			err = GetSecureCookie().Decode("jwt", reqCookie.Value, &val)
-			if err == nil {
-				fmt.Printf("JWT from decoded cookie %v", val["jwt"])
-			} else {
-				fmt.Println(err.Error())
+			fmt.Println(err)
+			if err == u.ErrUserExists {
+				fmt.Println("user exists")
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte("409 - user with this username already exists"))
+			} else if err == u.ErrPasswordInvalidFormat {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("401 - password too short"))
 			}
 		}
-		u.Response(w, u.Message("success", "Test()"))
+		http.SetCookie(w, PrepareCookie(CreateToken(w, newUser), "jwt"))
+		fmt.Println(userAdded)
+	}
+}
+
+// CsrfPostTest tests post with csrf protection
+func CsrfPostTest() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("POST WENT THROUGH WITH VALID CSRF")
+
+	}
+}
+
+// GetMessage returns a simple response -- placeholder to get csrf token
+func GetMessage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u.Response(w, u.Message("success", "it worked"))
+	}
+}
+
+// Hello lets you say hello to Obi-Wan Kenobi
+func Hello() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("Hello there")
 	}
 }
 
@@ -94,7 +105,7 @@ func jWTFromCookie(r *http.Request) (string, error) {
 
 	reqCookie, err := r.Cookie("jwt")
 	if err != nil {
-		return "", errors.New("cookie does not exist")
+		return "", err
 	}
 
 	val := make(map[string]string)
@@ -102,17 +113,17 @@ func jWTFromCookie(r *http.Request) (string, error) {
 	if err == nil {
 		fmt.Printf("JWT from decoded cookie %v", val["jwt"])
 		return val["jwt"], nil
-	} else {
-		fmt.Println(err.Error())
-		return "", err
 	}
+
+	fmt.Println(err.Error())
+	return "", err
 
 }
 
 // JwtMiddleware checks requests that require auth
 func JwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		noAuthRequired := []string{"/api/Login", "/api/hello"}
+		noAuthRequired := []string{"/api/Login", "/api/hello", "/api/register", "/Login", "/api/getTest", "/Register"}
 		requestURL := r.URL.Path
 		requestMethod := r.Method
 		fmt.Println(requestMethod)
@@ -124,9 +135,18 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		tokenHeader := r.Header.Get("Authorization")
-		fmt.Println("JWT from client request", tokenHeader)
-		if tokenHeader == "" {
+		tokenStr, err1 := jWTFromCookie(r)
+		if err1 != nil {
+			fmt.Println(err1)
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404 - cookie does not exists or error decoding value"))
+			return
+		}
+
+		fmt.Println("jwt from cookie in middleware")
+		fmt.Println(tokenStr)
+
+		if tokenStr == "" {
 			fmt.Println("no jwt")
 			response := u.Message("fail", "Missing auth token")
 			w.WriteHeader(http.StatusForbidden)
@@ -135,17 +155,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		newToken, err1 := jWTFromCookie(r)
-		if err1 != nil {
-			fmt.Println(err1)
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404 - cookie does not exists or error decoding value"))
-		} else {
-			fmt.Println("jwt from cookie in middleware")
-			fmt.Println(newToken)
-		}
 		// Check the token, do some error handling and then process the token
-		tokenStr := tokenHeader[7:len(tokenHeader)]
 		claimsTk := &JwtToken{}
 		token, err := jwt.ParseWithClaims(tokenStr, claimsTk, func(token *jwt.Token) (interface{}, error) {
 			return SigningKey, nil
@@ -159,12 +169,10 @@ func JwtMiddleware(next http.Handler) http.Handler {
 		}
 
 		claims, ok := token.Claims.(*JwtToken)
-		fmt.Println("user id from jwt")
-		fmt.Println(claims.UserID)
 
 		if ok && token.Valid {
 			// get claims here
-			fmt.Println("user id from jwt")
+			fmt.Println("user id from valid jwt")
 			fmt.Println(claims.UserID)
 
 		} else {
@@ -173,6 +181,14 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		// fmt.Printf("%+v %+v", claims.UserID, claims.Exp)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// CsrfTokenMiddleware adds the X-CSRF-Token to get requests
+func CsrfTokenMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 		next.ServeHTTP(w, r)
 	})
 }
@@ -195,28 +211,11 @@ func CreateToken(w http.ResponseWriter, userInfo models.User) string {
 	return tokenString
 }
 
-/* old create token ---- works
-
-func CreateToken(userInfo models.User) string {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["UserID"] = userInfo.UserID
-	claims["Exp"] = time.Now().Add(time.Hour * 24).Unix()
-	tokenString, _ := token.SignedString(SigningKey)
-	//w.Write([]byte(tokenString))
-	fmt.Println(tokenString)
-	return tokenString
-}
-
-*/
-// CreateCookie will put the jwt inside a secure cookie and set it
-func CreateCookie() string {
-	return ""
-}
-
 // notes json tags in structs ---- field/member needs to be exported for encoding/json library to access it
 //json.Unmarshal(rBody, &userLoginEvent)
 //var userInfo []string
 //u.Response(w, map[string]interface{}{"jwt": CreateToken(arr)})
 //fmt.Println(w.Header)
-// notes -- generating a random key has been problematic
+// notes -- generating a random key has been problematic -- SOLVED problem was using old cookie in tests of the api route
+// Login flow ----- Login with /Login route ------ will get a jwt token
+// When GET request is made client will receive csrf_cookie and CSRF token that it must store

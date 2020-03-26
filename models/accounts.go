@@ -1,13 +1,15 @@
 package models
 
 import (
+	"errors"
 	"fmt"
+	"goapp1/util"
 
 	"github.com/jinzhu/gorm"
 )
 
 type User struct {
-	UserID   uint   `gorm:"primary_key;column:UserID"`
+	UserID   uint   `gorm:"primary_key;column:UserID; AUTO_INCREMENT"`
 	Username string `gorm:"column:Username"`
 	Password string `gorm:"column:Password"`
 }
@@ -18,6 +20,27 @@ type Userdetail struct {
 	Email        string
 	PhoneNumber  string
 	UserID       string
+}
+
+// AddUser will add a user to the database
+func AddUser(newUser User) (bool, error) {
+	if exists, existingUser := ValidUser(newUser.Username); exists != false {
+		fmt.Println(existingUser)
+		return false, util.ErrUserExists
+	}
+	if len(newUser.Password) < 8 {
+		return false, util.ErrPasswordInvalidFormat
+	}
+
+	err := GetDbConn().Create(&newUser).Error
+
+	if err != nil && err != gorm.ErrInvalidSQL {
+		fmt.Println("invalid syntax")
+		return false, errors.New("Invalid syntax")
+	}
+
+	return true, nil
+
 }
 
 // ValidUser checks if user exists TODO returns bool if it exists and the user struct

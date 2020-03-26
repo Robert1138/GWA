@@ -23,6 +23,9 @@ func init() {
 		Apparently we do not close db everytime we get it.
 		The db object lives for the life of the program.
 		However the following needs to be set for safety.
+		connection.DB().SetConnMaxLifetime(time.Minute * 10)
+		connection.DB().SetMaxIdleConns(1)
+		connection.DB().SetMaxOpenConns(0)
 	*/
 
 	dbName := os.Getenv("db_name")
@@ -43,6 +46,8 @@ func init() {
 	connection.DB().SetMaxOpenConns(0)
 
 	db = connection
+	fmt.Println("DB initialized")
+	// this makes sure gorm is using singular table names in queries
 	db.SingularTable(true)
 	/**/
 	// connection.Close()
