@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -12,6 +13,7 @@ import (
 var db *gorm.DB
 
 func init() {
+
 	env := godotenv.Load("..\\src\\goapp1\\.env")
 	if env != nil {
 		fmt.Println(env)
@@ -21,11 +23,11 @@ func init() {
 		Apparently we do not close db everytime we get it.
 		The db object lives for the life of the program.
 		However the following needs to be set for safety.
-
-		db.DB().SetConnMaxLifetime(time.Minute * whatever is determined)
-		db.DB().SetMaxIdleConns()
-		db.DB().SetMaxOpenConns()
+		connection.DB().SetConnMaxLifetime(time.Minute * 10)
+		connection.DB().SetMaxIdleConns(1)
+		connection.DB().SetMaxOpenConns(0)
 	*/
+
 	dbName := os.Getenv("db_name")
 	dbPassword := os.Getenv("db_pass")
 	dbHost := os.Getenv("db_host")
@@ -39,18 +41,28 @@ func init() {
 	if e != nil {
 		fmt.Println(e)
 	}
+	connection.DB().SetConnMaxLifetime(time.Minute * 10)
+	connection.DB().SetMaxIdleConns(1)
+	connection.DB().SetMaxOpenConns(0)
 
 	db = connection
-
+	fmt.Println("DB initialized")
+	// this makes sure gorm is using singular table names in queries
+	db.SingularTable(true)
+	/**/
 	// connection.Close()
 
 }
 
+// DbTest ----- will deal with this later
 func DbTest() {
 	fmt.Println("Db init")
 }
 
-// GetDbConn() will return the global db connection variable
+// GetDbConn will return the global db connection variable
 func GetDbConn() *gorm.DB {
 	return db
 }
+
+// notes
+// db.SingularTable(true) makes gorm not assume evertable is plural
