@@ -6,6 +6,7 @@ import (
 	"goapp1/util"
 
 	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -59,6 +60,40 @@ func ValidUser(currUsername string) (bool, User) {
 	} else {
 		return false, user // returns false if record is not found ..... and anything else bad that happens
 	}
+}
+
+// ValidUser2 checks if validates a potential user and returns an err and a struct
+func ValidUserPassword(currUsername string, password string) (User, error) {
+	user := User{}
+	db.LogMode(true)
+	db := GetDbConn()
+	err := db.Table("user").Where("Username=?", currUsername).First(&user).Error
+
+	// err if successful will always return nil
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		fmt.Println("Error occured connecting to DB")
+		return User{}, err
+	} else if !gorm.IsRecordNotFoundError(err) { // record is found
+		if checkPassword(user.Password, password) { // only if this is true will this func return a populated User struct
+			return user, err
+		}
+		return User{}, err
+	} else {
+		return User{}, err // returns false if record is not found ..... and anything else bad that happens
+	}
+}
+
+func hashPassword(password string) (string, error) {
+	passBytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(passBytes), err
+}
+
+func checkPassword(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 /*

@@ -11,6 +11,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/csrf"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // SigningKey is the key or decoding secure cookies
@@ -58,6 +59,10 @@ func Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newUser models.User
 		err := json.NewDecoder(r.Body).Decode(&newUser)
+		newUser.Password, err = hashPassword(newUser.Password)
+		if err != nil {
+			fmt.Println("password couldnt be encrypted")
+		}
 		userAdded, err := models.AddUser(newUser)
 
 		if err != nil {
@@ -100,6 +105,19 @@ func Hello() http.HandlerFunc {
 	}
 }
 
+func hashPassword(password string) (string, error) {
+	passBytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(passBytes), err
+}
+
+func checkPassword(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 // jWTFromCookie decodes the cookie and returns the jwt
 func jWTFromCookie(r *http.Request) (string, error) {
 
@@ -123,7 +141,7 @@ func jWTFromCookie(r *http.Request) (string, error) {
 // JwtMiddleware checks requests that require auth
 func JwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		noAuthRequired := []string{"/api/Login", "/api/hello", "/api/register", "/Login", "/api/getTest", "/Register"}
+		noAuthRequired := []string{"/hello", "/Login", "/Register"}
 		requestURL := r.URL.Path
 		requestMethod := r.Method
 		fmt.Println(requestMethod)
