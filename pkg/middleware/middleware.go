@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	auth "goapp1/pkg/auth"
+	//auth "goapp1/pkg/auth"
 	"goapp1/util"
-	"log"
+	j "goapp1/util/jwt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -35,7 +35,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		tokenStr, err1 := auth.JWTFromCookie(r)
+		tokenStr, err1 := j.ParseFromCookie(r)
 		// missing cookie or issue decoding it
 		if err1 != nil {
 			fmt.Println(err1)
@@ -54,9 +54,9 @@ func JwtMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check the token, do some error handling and then process the token
-		claimsTk := &auth.JwtToken{}
+		claimsTk := &j.JwtToken{}
 		token, err := jwt.ParseWithClaims(tokenStr, claimsTk, func(token *jwt.Token) (interface{}, error) {
-			return auth.SigningKey, nil
+			return j.SigningKey, nil
 		})
 		// indicated token wasnt created correctly or it was modified
 		if err != nil {
@@ -66,13 +66,12 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, ok := token.Claims.(*auth.JwtToken)
+		claims, ok := token.Claims.(*j.JwtToken)
 
 		if ok && token.Valid {
 			// get claims here -- in this case its the userId and do something like pass it on with the request
 			fmt.Println("user id from valid jwt")
 			fmt.Println(claims.UserID)
-
 		} else {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("403 -Invalid token"))
@@ -87,12 +86,6 @@ func JwtMiddleware(next http.Handler) http.Handler {
 func CsrfTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
-		next.ServeHTTP(w, r)
-	})
-}
-func RouteLogging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }

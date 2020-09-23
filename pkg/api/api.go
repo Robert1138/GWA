@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"goapp1/pkg/account"
 	"goapp1/pkg/auth"
 	"goapp1/pkg/csrftest"
 	"goapp1/pkg/item"
@@ -42,6 +43,7 @@ func StartAPI() {
 	auth.HTTPRoutes(router, logger) // csrf middleware not intended to be attached
 	// At this point endpoints are address:port/v1/whatever If it needs auth it goes here
 	api := router.PathPrefix("/v1").Subrouter()
+	account.HTTPRoutes(api, logger)
 	csrftest.HTTPRoutes(api, logger)
 
 	api.Use(csrfMiddleware)

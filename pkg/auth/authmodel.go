@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	u "goapp1/pkg/user"
 	"goapp1/util"
 	"goapp1/util/db"
 
@@ -27,7 +28,7 @@ type Account struct {
 }
 
 // AddUser will add a user to the database
-func AddUser(newUser User) (bool, error) {
+func AddUser(newUser u.User) (bool, error) {
 	if exists, existingUser := ValidUser(newUser.UserName); exists != false {
 		fmt.Println(existingUser)
 		return false, util.ErrUserExists
@@ -53,8 +54,8 @@ func AddUser(newUser User) (bool, error) {
 }
 
 // ValidUser checks if user exists TODO returns bool if it exists and the user struct
-func ValidUser(currUserName string) (bool, User) {
-	user := User{}
+func ValidUser(currUserName string) (bool, u.User) {
+	user := u.User{}
 	db.GetDbConn().LogMode(true)
 
 	err := db.GetDbConn().Table("user").Where("UserName=?", currUserName).First(&user).Error
@@ -71,8 +72,8 @@ func ValidUser(currUserName string) (bool, User) {
 }
 
 // not used, determining if needed
-func verifyUser(currUserName string, currUserPassword string) (bool, User) {
-	user := User{}
+func verifyUser(currUserName string, currUserPassword string) (bool, u.User) {
+	user := u.User{}
 	db.GetDbConn().LogMode(true)
 
 	err := db.GetDbConn().Table("user").Where("UserName=? AND UserPassword=?", currUserName, currUserPassword).First(&user).Error
@@ -89,8 +90,8 @@ func verifyUser(currUserName string, currUserPassword string) (bool, User) {
 }
 
 // ValidUserPassword checks if user exists and if the password matches.  Returns a User struct and a bool if user pass matched
-func ValidUserPassword(currUserName string, password string) (User, bool) {
-	user := User{}
+func ValidUserPassword(currUserName string, password string) (u.User, bool) {
+	user := u.User{}
 	db.GetDbConn().LogMode(true)
 
 	err := db.GetDbConn().Table("user").Where("UserName=?", currUserName).First(&user).Error
@@ -98,7 +99,7 @@ func ValidUserPassword(currUserName string, password string) (User, bool) {
 	// err if successful will always return nil
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		fmt.Println("Error occured connecting to DB")
-		return User{}, false
+		return u.User{}, false
 	} else if !gorm.IsRecordNotFoundError(err) { // record is found
 		if checkPassword(user.Password, password) { // only if this is true will this func return a populated User struct
 			fmt.Println("user pass matches")
@@ -106,9 +107,9 @@ func ValidUserPassword(currUserName string, password string) (User, bool) {
 		}
 		fmt.Println("user pass does not match")
 
-		return User{}, false
+		return u.User{}, false
 	} else {
-		return User{}, false // returns false if record is not found ..... and anything else bad that happens
+		return u.User{}, false // returns false if record is not found ..... and anything else bad that happens
 	}
 }
 

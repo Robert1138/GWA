@@ -3,7 +3,9 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	u "goapp1/pkg/user"
 	"goapp1/util"
+	"goapp1/util/jwt"
 	lg "goapp1/util/log"
 	"net/http"
 
@@ -43,7 +45,7 @@ func Login() http.HandlerFunc {
 		if isValid {
 			log.Info("User valid login " + user.UserName)
 			fmt.Println(userCred.UserID)
-			http.SetCookie(w, PrepareCookie(CreateToken(w, userCred), "jwt"))
+			http.SetCookie(w, jwt.PrepareCookie(jwt.CreateToken(w, userCred), "jwt"))
 		} else {
 			w.WriteHeader(http.StatusUnprocessableEntity) // send a 422 -- user they sent does not exist
 			util.Response(w, util.Message("422", "Unprocessable Entity - check what you're sending - user might not exist"))
@@ -55,7 +57,7 @@ func Login() http.HandlerFunc {
 // Register will
 func Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var newUser User
+		var newUser u.User
 		err := json.NewDecoder(r.Body).Decode(&newUser)
 		//newUser.Password, err = hashPassword(newUser.Password)
 		if err != nil {
@@ -76,7 +78,7 @@ func Register() http.HandlerFunc {
 				w.Write([]byte("401 - password too short"))
 			}
 		}
-		http.SetCookie(w, PrepareCookie(CreateToken(w, newUser), "jwt"))
+		http.SetCookie(w, jwt.PrepareCookie(jwt.CreateToken(w, newUser), "jwt"))
 		fmt.Println(userAdded)
 	}
 }

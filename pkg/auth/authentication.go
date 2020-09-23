@@ -22,8 +22,8 @@ type JwtToken struct {
 // CreateToken call this to create the token using secret and return the string
 // User auth data includes role, username,
 func CreateToken(w http.ResponseWriter, userInfo User) string {
-	expTime := time.Now().Add(time.Hour * 24).Unix()
-	claims := &JwtToken{Exp: expTime, UserID: userInfo.UserID}
+	expTime := time.Now().Add(time.Minute * 10).Unix()
+	claims := &JwtToken{Exp: expTime, UserID: userInfo.UserID, StandardClaims: jwt.StandardClaims{ExpiresAt: expTime}}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(SigningKey)
 	// need to figure out a better way to handle when this function fails to create a token
