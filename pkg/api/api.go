@@ -46,9 +46,9 @@ func StartAPI() {
 	account.HTTPRoutes(api, logger)
 	csrftest.HTTPRoutes(api, logger)
 
+	api.Use(middleware.JwtMiddleware)
 	api.Use(csrfMiddleware)
 	api.Use(middleware.CsrfTokenMiddleware) // sets csrf token in header for all get request
-	api.Use(middleware.JwtMiddleware)
 
 	logHandler := handlers.LoggingHandler(os.Stdout, router)
 	c := cors.New(cors.Options{
