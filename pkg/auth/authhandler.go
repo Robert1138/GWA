@@ -20,8 +20,8 @@ type userLogin struct {
 }
 
 // HTTPRoutes registers endpoints and their appropriate HandlerFuncs to the provided router as well as any subrouters.
-func HTTPRoutes(router *mux.Router, newLoggger *lg.StandardLogger) {
-	log = newLoggger
+func HTTPRoutes(router *mux.Router, newLogger *lg.StandardLogger) {
+	log = newLogger
 	router.HandleFunc("/login", Login()).Methods("POST")
 	router.HandleFunc("/register", Register()).Methods("POST")
 }

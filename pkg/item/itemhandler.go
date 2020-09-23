@@ -2,14 +2,18 @@ package item
 
 import (
 	"encoding/json"
+	lg "goapp1/util/log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
+var log *lg.StandardLogger
+
 // HTTPRoutes registers endpoints and their appropriate HandlerFuncs to the provided router as well as any subrouters.
-func HTTPRoutes(router *mux.Router) {
+func HTTPRoutes(router *mux.Router, newLogger *lg.StandardLogger) {
+	log = newLogger
 	itemSubrouter := router.PathPrefix("/items").Subrouter()
 	itemSubrouter.HandleFunc("/{itemID}", item()).Methods("GET")
 }
