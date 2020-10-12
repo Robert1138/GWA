@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"fmt"
+	"strconv"
+
 	//auth "goapp1/pkg/auth"
 	"goapp1/util"
 	j "goapp1/util/jwt"
@@ -72,6 +74,8 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			// get claims here -- in this case its the userId and do something like pass it on with the request
 			fmt.Println("user id from valid jwt")
 			fmt.Println(claims.UserID)
+			addClaims(r, claims)
+			//r.Header.Set("UserID", strconv.FormatUint(uint64(claims.UserID), 10))
 		} else {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("403 -Invalid token"))
@@ -88,4 +92,10 @@ func CsrfTokenMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 		next.ServeHTTP(w, r)
 	})
+}
+
+// addClaims sets headers in the request for each of the claims that are used in authenticated reqs.
+// Intended to add specifed claims ex UserID, UserEmail but not Expiration or the like
+func addClaims(r *http.Request, claims *j.JwtToken) {
+	r.Header.Set("UserID", strconv.FormatUint(uint64(claims.UserID), 10))
 }

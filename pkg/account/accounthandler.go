@@ -6,6 +6,7 @@ import (
 	"goapp1/util"
 	lg "goapp1/util/log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -31,12 +32,19 @@ func ChangePassword() http.HandlerFunc {
 		dec.DisallowUnknownFields()
 
 		var passwordset Passwords
-		err := dec.Decode(&passwordset)
-		if err != nil {
+		if err := dec.Decode(&passwordset); err != nil {
 			log.Error(errors.New(err.Error() + errors.New(" ChangePassword: accounthandler").Error()))
 			util.Respond(w, &util.StandardResponse{Status: 422, Type: "Unprocessable Entity", Error: true, Message: "received incorrect json body"})
 		}
-		//updated := UpdatePassword()
+		userID, convErr := strconv.Atoi(r.Header.Get("UserID"))
+		if convErr != nil {
+			log.Error(errors.New(convErr.Error() + errors.New(" ChangePassword: accounthandler").Error()))
+			util.Respond(w, &util.StandardResponse{Status: 500, Type: "Internal Server Error", Error: true, Message: convErr.Error()})
+		}
+		if updateErr := UpdatePassword(userID, passwordset.NewPassword); updateErr != nil {
+			log.Error(errors.New(updateErr.Error() + errors.New(" ChangePassword: accounthandler").Error()))
+			util.Respond(w, &util.StandardResponse{Status: 404, Type: "Not Found", Error: true, Message: updateErr.Error()})
+		}
 
 	}
 }

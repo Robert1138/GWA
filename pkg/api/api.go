@@ -52,7 +52,7 @@ func StartAPI() {
 
 	logHandler := handlers.LoggingHandler(os.Stdout, router)
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowedOrigins:   []string{"http://localhost:4200", "https://auction-e5422.web.app"},
 		AllowCredentials: true,
 		Debug:            true, // Debug true for testing, disable for production
 

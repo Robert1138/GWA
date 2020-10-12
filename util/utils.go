@@ -2,7 +2,10 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // StandardResponse is a struct that holds information about the response to a http request
@@ -29,4 +32,18 @@ func Respond(w http.ResponseWriter, data *StandardResponse) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(data.Status)
 	json.NewEncoder(w).Encode(data)
+}
+
+func HashPassword(password string) (string, error) {
+	passBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(passBytes), err
+}
+
+func CheckPassword(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	return true
 }
