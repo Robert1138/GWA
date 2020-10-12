@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"goapp1/pkg/account"
 	"goapp1/pkg/auth"
 	"goapp1/pkg/csrftest"
 	"goapp1/pkg/item"
@@ -38,19 +39,20 @@ func StartAPI() {
 	csrfMiddleware := csrf.Protect([]byte(os.Getenv("csrfkey")), csrf.Secure(false)) //
 	// At this point endpoints are address:port/example    If it doesnt need auth it goes here
 	misc.HTTPRoutes(router, logger)
-	item.HTTPRoutes(router)
+	item.HTTPRoutes(router, logger)
 	auth.HTTPRoutes(router, logger) // csrf middleware not intended to be attached
 	// At this point endpoints are address:port/v1/whatever If it needs auth it goes here
 	api := router.PathPrefix("/v1").Subrouter()
+	account.HTTPRoutes(api, logger)
 	csrftest.HTTPRoutes(api, logger)
 
+	api.Use(middleware.JwtMiddleware)
 	api.Use(csrfMiddleware)
 	api.Use(middleware.CsrfTokenMiddleware) // sets csrf token in header for all get request
-	api.Use(middleware.JwtMiddleware)
 
 	logHandler := handlers.LoggingHandler(os.Stdout, router)
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowedOrigins:   []string{"http://localhost:4200", "https://auction-e5422.web.app"},
 		AllowCredentials: true,
 		Debug:            true, // Debug true for testing, disable for production
 

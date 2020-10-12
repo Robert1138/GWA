@@ -61,7 +61,7 @@ func StartServer(handler *http.Handler) {
 		The server gets started in a go function while a channel is set up to listen to any signals that
 		might shutdown this process.  When the channel gets a signal we create the initial context using
 		the top-level context (context.Background()) and cancels when the timeout period has ended.
-		At this point we do some clean up and shutdowns the server
+		At this point we do some clean up and shutdown the server
 
 	*/
 	go func() { // this could be switched with listening for signals portion in the following after this block
@@ -88,14 +88,6 @@ func StartServer(handler *http.Handler) {
 		fmt.Println("no shutdown errors")
 	}
 
-}
-
-//Shutdown encapsulates shutdown so extra resources can be handled
-func Shutdown(ctx context.Context, svr *http.Server) {
-	//lg.CloseOutputFile()
-	if err := svr.Shutdown(ctx); err != nil {
-		fmt.Println("error during shutown")
-	}
 }
 
 /*
