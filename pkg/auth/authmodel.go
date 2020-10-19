@@ -3,9 +3,11 @@ package auth
 import (
 	"errors"
 	"fmt"
-	u "goapp1/pkg/user"
-	"goapp1/util"
-	"goapp1/util/db"
+
+	u "github.com/Robert1138/GWA/pkg/user"
+
+	"github.com/Robert1138/GWA/util"
+	"github.com/Robert1138/GWA/util/db"
 
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"

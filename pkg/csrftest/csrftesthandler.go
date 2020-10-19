@@ -2,9 +2,10 @@ package csrftest
 
 import (
 	"encoding/json"
-	"goapp1/util"
-	lg "goapp1/util/log"
 	"net/http"
+
+	"github.com/Robert1138/GWA/util"
+	lg "github.com/Robert1138/GWA/util/log"
 
 	"github.com/gorilla/mux"
 )

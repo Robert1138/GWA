@@ -3,17 +3,18 @@ package server
 import (
 	"context"
 	"fmt"
-	lg "goapp1/util/log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	lg "github.com/Robert1138/GWA/util/log"
+
 	"github.com/joho/godotenv"
 )
 
-var configPath = "..\\src\\goapp1\\.env" // this was made on windows...dont judge me
+var configPath = "..\\src\\github.com\\Robert1138\\GWA\\.env" // this was made on windows...dont judge me
 // Planning for serverConfig and start server to handle everything from the .env file
 func loadConfig() (map[string]string, error) {
 	env := godotenv.Load(configPath)

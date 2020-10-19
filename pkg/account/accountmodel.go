@@ -1,8 +1,8 @@
 package account
 
 import (
-	"goapp1/util"
-	"goapp1/util/db"
+	"github.com/Robert1138/GWA/util"
+	"github.com/Robert1138/GWA/util/db"
 
 	"github.com/jinzhu/gorm"
 )

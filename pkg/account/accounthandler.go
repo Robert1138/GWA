@@ -3,10 +3,11 @@ package account
 import (
 	"encoding/json"
 	"errors"
-	"goapp1/util"
-	lg "goapp1/util/log"
 	"net/http"
 	"strconv"
+
+	"github.com/Robert1138/GWA/util"
+	lg "github.com/Robert1138/GWA/util/log"
 
 	"github.com/gorilla/mux"
 )

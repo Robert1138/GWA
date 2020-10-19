@@ -3,11 +3,12 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	u "goapp1/pkg/user"
-	"goapp1/util"
-	"goapp1/util/jwt"
-	lg "goapp1/util/log"
 	"net/http"
+
+	u "github.com/Robert1138/GWA/pkg/user"
+	"github.com/Robert1138/GWA/util"
+	"github.com/Robert1138/GWA/util/jwt"
+	lg "github.com/Robert1138/GWA/util/log"
 
 	"github.com/gorilla/mux"
 )
