@@ -2,16 +2,19 @@ package api
 
 import (
 	"fmt"
-	"goapp1/pkg/account"
-	"goapp1/pkg/auth"
-	"goapp1/pkg/csrftest"
-	"goapp1/pkg/item"
-	"goapp1/pkg/middleware"
-	"goapp1/pkg/misc"
-	lg "goapp1/util/log"
-	"goapp1/util/server"
 	"os"
 
+	"github.com/Robert1138/GWA/pkg/auth"
+	"github.com/Robert1138/GWA/pkg/csrftest"
+	"github.com/Robert1138/GWA/pkg/item"
+	"github.com/Robert1138/GWA/pkg/middleware"
+	"github.com/Robert1138/GWA/pkg/misc"
+	lg "github.com/Robert1138/GWA/util/log"
+	"github.com/Robert1138/GWA/util/server"
+
+	"github.com/Robert1138/GWA/pkg/account"
+
+	_ "github.com/Robert1138/GWA/util/log"
 	"github.com/rs/cors"
 
 	"github.com/gorilla/csrf"
@@ -32,7 +35,6 @@ func StartAPI() {
 	// Instead of defer, the logging output file is closed on server shutdown
 	logger := lg.NewLogger()
 	logger.Info("logger in api is working")
-
 	router := mux.NewRouter()
 	fmt.Println("Router setup")
 

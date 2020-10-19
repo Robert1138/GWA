@@ -3,10 +3,13 @@ package jwt
 import (
 	"errors"
 	"fmt"
-	u "goapp1/pkg/user"
 	"net/http"
 	"os"
 	"time"
+
+	u "github.com/Robert1138/GWA/pkg/user"
+	_ "github.com/Robert1138/GWA/util/log"
+	"github.com/joho/godotenv"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/securecookie"
@@ -15,22 +18,21 @@ import (
 // pointer to the struct that encodes and decodes
 var sCookie *securecookie.SecureCookie
 
-//
+// SigningKey is for the jwt
 var SigningKey = []byte(os.Getenv("token_secret"))
 
-type JwtToken struct {
+// CustomToken represents the contents of the token
+type CustomToken struct {
 	UserID uint
 	jwt.StandardClaims
 }
 
 func init() {
-
+	godotenv.Load("..\\src\\github.com\\Robert1138\\GWA\\.env") // must load env since init() runs before main
 	var hashKey = []byte(os.Getenv("hashkey"))
 	var blockKey = []byte(os.Getenv("blockkey"))
 	sCookie = securecookie.New(hashKey, blockKey)
 	fmt.Println("sCookie has been initialized")
-	fmt.Println(os.Getenv("hashkey"))
-
 	// fmt.Println(base64.StdEncoding.EncodeToString([]byte(securecookie.GenerateRandomKey(32))))
 	// fmt.Println(base64.StdEncoding.EncodeToString([]byte(securecookie.GenerateRandomKey(32))))
 }
@@ -38,7 +40,7 @@ func init() {
 // CreateToken creates a token with user auth data (UserID, role, etc) and returns it as a string
 func CreateToken(w http.ResponseWriter, userInfo u.User) string {
 	expTime := time.Now().Add(time.Minute * 10).Unix()
-	claims := &JwtToken{UserID: userInfo.UserID, StandardClaims: jwt.StandardClaims{ExpiresAt: expTime}}
+	claims := &CustomToken{UserID: userInfo.UserID, StandardClaims: jwt.StandardClaims{ExpiresAt: expTime}}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(SigningKey)
 
@@ -73,6 +75,8 @@ func PrepareCookie(token string, tokenName string) *http.Cookie {
 			HttpOnly: true,
 		}
 		cookie = tempCookie
+	} else {
+		fmt.Println(err) // TODO: log this - will require loggger to be passed in or access directly from log pkg
 	}
 	return cookie
 }
@@ -97,7 +101,7 @@ func ParseFromCookie(r *http.Request) (string, error) {
 
 // ParseUserID takes a JWT token string and returns the UserID claim
 func ParseUserID(tokenStr string) (int, error) {
-	claimsTK := &JwtToken{}
+	claimsTK := &CustomToken{}
 	token, err := jwt.ParseWithClaims(tokenStr, claimsTK, func(token *jwt.Token) (interface{}, error) {
 		return SigningKey, nil
 	})
@@ -106,7 +110,7 @@ func ParseUserID(tokenStr string) (int, error) {
 		return 0, errors.New("malformed token")
 	}
 
-	claims, ok := token.Claims.(*JwtToken)
+	claims, ok := token.Claims.(*CustomToken)
 	if ok && token.Valid {
 		return int(claims.UserID), nil
 	}

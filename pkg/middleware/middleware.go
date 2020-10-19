@@ -5,9 +5,10 @@ import (
 	"strconv"
 
 	//auth "goapp1/pkg/auth"
-	"goapp1/util"
-	j "goapp1/util/jwt"
 	"net/http"
+
+	"github.com/Robert1138/GWA/util"
+	j "github.com/Robert1138/GWA/util/jwt"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/csrf"
@@ -15,7 +16,7 @@ import (
 
 // var SigningKey = []byte(os.Getenv("token_secret"))
 /*
-type JwtToken struct {
+type CustomToken struct {
 	Exp    int64
 	UserID uint
 	jwt.StandardClaims
@@ -56,7 +57,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check the token, do some error handling and then process the token
-		claimsTk := &j.JwtToken{}
+		claimsTk := &j.CustomToken{}
 		token, err := jwt.ParseWithClaims(tokenStr, claimsTk, func(token *jwt.Token) (interface{}, error) {
 			return j.SigningKey, nil
 		})
@@ -68,7 +69,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, ok := token.Claims.(*j.JwtToken)
+		claims, ok := token.Claims.(*j.CustomToken)
 
 		if ok && token.Valid {
 			// get claims here -- in this case its the userId and do something like pass it on with the request
@@ -96,6 +97,6 @@ func CsrfTokenMiddleware(next http.Handler) http.Handler {
 
 // addClaims sets headers in the request for each of the claims that are used in authenticated reqs.
 // Intended to add specifed claims ex UserID, UserEmail but not Expiration or the like
-func addClaims(r *http.Request, claims *j.JwtToken) {
+func addClaims(r *http.Request, claims *j.CustomToken) {
 	r.Header.Set("UserID", strconv.FormatUint(uint64(claims.UserID), 10))
 }
