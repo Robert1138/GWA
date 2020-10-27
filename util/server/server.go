@@ -6,26 +6,29 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	lg "github.com/Robert1138/GWA/util/log"
-
 	"github.com/joho/godotenv"
 )
 
-var configPath = "..\\src\\github.com\\Robert1138\\GWA\\.env" // this was made on windows...dont judge me
 // Planning for serverConfig and start server to handle everything from the .env file
 func loadConfig() (map[string]string, error) {
-	env := godotenv.Load(configPath)
-	if env != nil {
-		return map[string]string{}, env
+	configPath, err := filepath.Abs("../src/github.com/Robert1138/GWA/.env")
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	err = godotenv.Load(configPath)
+	if err != nil {
+		return map[string]string{}, err
 	}
 
 	serverConfig, err := godotenv.Read(configPath)
 	if err != nil {
 		fmt.Println("in server LoadConfig Read()")
-		fmt.Println("READ() ")
 		fmt.Println(err)
 		return map[string]string{}, err
 	}
@@ -90,27 +93,3 @@ func StartServer(handler *http.Handler) {
 	}
 
 }
-
-/*
-reminder that this code made you want to look something up
-
-var globalCfg *serverConfig
-
-type serverConfig struct {
-	Addr         string
-	ReadTimeout  int
-	WriteTimeout int
-}
-
-// Planning for serverConfig and start server to handle everything from the .env file
-func loadConfig() {
-	globalCfg = &serverConfig{
-		Addr:         os.Getenv("port"),
-		ReadTimeout:  os.Getenv("readtimeout"),
-		WriteTimeout: os.Getenv("writetimeout"),
-	}
-}
-
-
-
-*/

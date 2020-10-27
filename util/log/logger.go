@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,8 +18,13 @@ type StandardLogger struct {
 
 // NewLogger returns a logger pointer and the output file descriptor for safe clean up
 func NewLogger() *StandardLogger {
-	f, err1 := os.OpenFile("..\\src\\goapp1\\info.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	if err1 != nil {
+	absPath, err := filepath.Abs("./info.log")
+	if err != nil {
+		fmt.Println(err) // TODO there will be no logging if this fails
+	}
+
+	f, errF := os.OpenFile(absPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+	if errF != nil {
 		fmt.Println("log failed")
 		f.Close()
 	}
