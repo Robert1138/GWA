@@ -63,6 +63,4 @@ func StartAPI() {
 
 	fmt.Println("Starting server")
 	server.StartServer(&corsHandler)
-	//fmt.Println("got here after server closed")
-
 }

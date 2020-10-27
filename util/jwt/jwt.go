@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	u "github.com/Robert1138/GWA/pkg/user"
@@ -28,7 +29,11 @@ type CustomToken struct {
 }
 
 func init() {
-	godotenv.Load("..\\src\\github.com\\Robert1138\\GWA\\.env") // must load env since init() runs before main
+	configPath, err := filepath.Abs("../src/github.com/Robert1138/GWA/.env")
+	if err != nil {
+		fmt.Println(err)
+	}
+	godotenv.Load(configPath) // must load env since init() runs before main
 	var hashKey = []byte(os.Getenv("hashkey"))
 	var blockKey = []byte(os.Getenv("blockkey"))
 	sCookie = securecookie.New(hashKey, blockKey)
